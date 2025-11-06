@@ -71,11 +71,20 @@
             cursor: pointer;
             font-size: 16px;
             margin-right: 10px;
+            margin-top: 8px; /* Added for MC buttons */
             transition: background-color 0.3s;
         }
         button:hover {
             background-color: #0056b3;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .mc-options button {
+            background-color: #5bc0de;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .mc-options button:hover {
+            background-color: #31b0d5;
         }
         .score {
             text-align: right;
@@ -115,7 +124,7 @@
             background-color: #e0a800;
         }
 
-        /* --- NEW ANIMATION STYLES --- */
+        /* --- ANIMATION STYLES --- */
         #animation-feedback {
             position: fixed;
             top: 50%;
@@ -127,24 +136,48 @@
             transition: opacity 0.1s;
             z-index: 1000;
         }
-
         @keyframes data-burst {
-            0% {
-                transform: translate(-50%, -50%) scale(0.5);
-                opacity: 0;
-            }
-            50% {
-                transform: translate(-50%, -50%) scale(1.5);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(2);
-                opacity: 0;
-            }
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
         }
+        .animate { animation: data-burst 1s ease-out forwards; }
         
-        .animate {
-            animation: data-burst 1s ease-out forwards;
+        /* Modal for Cheat Sheet */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 3000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-btn:hover, .close-btn:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .rule-list strong {
+            color: #007bff;
         }
     </style>
 </head>
@@ -155,6 +188,11 @@
     <p>Practice reading climate graphs and applying classification rules!</p>
     <div class="score">Score: <span id="scoreValue">0</span></div>
     
+    <!-- Rules Guide/Cheat Sheet Button -->
+    <button onclick="openModal()" style="background-color: #f39c12; margin-bottom: 15px;">
+        <span style="font-weight: bold;">?</span> Rules Guide
+    </button>
+    
     <!-- NEW ANIMATION ELEMENT -->
     <div id="animation-feedback">✅</div>
 
@@ -162,13 +200,13 @@
     <div class="game-area">
         
         <!-- Story/Break Container -->
-        <div id="story-box" class="story-box" style="display: none;">
+        <div id="story-box" class="story-box">
             <h2 id="story-title"></h2>
             <p id="story-text"></p>
             <button id="story-button" onclick="handleStoryContinue()">Continue Mission</button>
         </div>
         
-        <!-- Climate Graph (Dynamically generated) -->
+        <!-- Graph and Knowledge Questions -->
         <div id="graph-section" style="display: none;">
             <h2>Graph Interpretation Challenge</h2>
             <p>Analyze the climate data below to secure the first data set:</p>
@@ -180,8 +218,9 @@
     
             <div id="graph-question" class="question-box">
                 <p id="graph-q-text">Loading question...</p>
-                <input type="text" id="graph-answer-input" placeholder="Enter month/value (e.g., J or -10)">
-                <button onclick="checkGraphAnswer()">Submit</button>
+                <div id="mc-options-graph" class="mc-options">
+                    <!-- Multiple choice buttons inserted here -->
+                </div>
                 <div id="graph-feedback" class="feedback-box"></div>
             </div>
         </div>
@@ -189,13 +228,14 @@
 
         <!-- Classification Challenge -->
         <div id="class-section" style="display: none;">
-            <h2>Classification Challenge 🏔️🌊</h2>
-            <p>You must correctly classify the climate types to prevent data corruption:</p>
+            <h2>Data Classification Station 🏔️🌊</h2>
+            <p>Use the provided summary data to correctly classify the climate type:</p>
             <div id="class-question" class="question-box">
                 <p id="class-q-text">Loading data...</p>
-                <p>Classify this climate type:</p>
-                <button onclick="checkClassAnswer('Maritime')">Maritime 🌊</button>
-                <button onclick="checkClassAnswer('Continental')">Continental 🏔️</button>
+                <div id="mc-options-class" class="mc-options">
+                    <button onclick="checkClassAnswer('Maritime')">Maritime 🌊 (Near Water)</button>
+                    <button onclick="checkClassAnswer('Continental')">Continental 🏔️ (Far Inland)</button>
+                </div>
                 <div id="class-feedback" class="feedback-box"></div>
             </div>
         </div>
@@ -203,10 +243,29 @@
         <div id="game-complete" class="story-box" style="display: none;">
             <h2>MISSION SUCCESSFUL! 🎉</h2>
             <p>You have secured all climate data! Your final score is <span id="finalScore" class="font-bold"></span>. You are officially a certified Climate Data Analyst.</p>
+            <!-- REPLAY BUTTON ADDED -->
+            <button onclick="resetGame()">Replay Mission 🔄</button>
         </div>
 
     </div>
     <!-- End Game Content -->
+</div>
+
+<!-- Modal Structure (Cheat Sheet) -->
+<div id="rulesModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>Classification Rules Guide</h2>
+        <p>Use these rules to categorize climates based on annual averages:</p>
+        <ul class="rule-list" style="list-style-type: none; padding: 0;">
+            <li><strong style="font-size: 1.1em;">🌊 Maritime Climate (Near Water)</strong></li>
+            <li style="margin-left: 20px;">🌡️ Annual Temperature Range is **moderate** (less than 25°C).</li>
+            <li style="margin-left: 20px;">💧 Total Annual Precipitation is **wet** (greater than 1000 mm).</li>
+            <li style="margin-top: 15px;"><strong style="font-size: 1.1em;">🏔️ Continental Climate (Far Inland)</strong></li>
+            <li style="margin-left: 20px;">🌡️ Annual Temperature Range is **Extreme** (greater than 25°C).</li>
+            <li style="margin-left: 20px;">💧 Total Annual Precipitation is **dry** (less than 1000 mm).</li>
+        </ul>
+    </div>
 </div>
 
 <script>
@@ -220,61 +279,76 @@
     const graphSection = document.getElementById('graph-section');
     const classSection = document.getElementById('class-section');
     const gameComplete = document.getElementById('game-complete');
-    const animationFeedback = document.getElementById('animation-feedback'); // New element
-
-    // --- Game Data ---
-    const CHART_MONTHS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
-    const TEMP_DATA = [-20, -22, -16, -10, -5, 2, 8, 9, 7, 0, -10, -18]; 
-    const PRECIP_DATA = [10, 8, 12, 16, 20, 25, 30, 40, 35, 28, 18, 12];
+    const animationFeedback = document.getElementById('animation-feedback');
+    const mcOptionsGraph = document.getElementById('mc-options-graph');
+    const graphFeedback = document.getElementById('graph-feedback');
+    const classFeedback = document.getElementById('class-feedback');
     
-    const graphQuestions = [
+    // Global variable to hold the currently selected data
+    let currentClimateData = {};
+
+    // --- Game Data: Multiple Climate Profiles ---
+    const CHART_MONTHS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+    
+    const CLIMATE_DATA_SETS = [
         {
-            q: "What month is the **Maximum Temperature** 🌡️ (highest point on the red line)? (Enter the first letter of the month)",
-            a: "A", 
-            concept: "The highest point on the temperature line (the red curve) is in **August** (A), showing the warmest monthly average."
+            name: "Continental (Extreme/Dry)",
+            temp: [-20, -22, -16, -10, -5, 2, 8, 9, 7, 0, -10, -18], // Max: 9, Min: -22. Range: 31 (Extreme)
+            precip: [10, 8, 12, 16, 20, 25, 30, 40, 35, 28, 18, 12], // Total: 254 (Dry)
+            questions: [
+                {
+                    q: "What month is the **Maximum Temperature** 🌡️ (highest point on the red line)?",
+                    a: "A", options: ["January (J)", "July (J)", "August (A)", "December (D)"],
+                    concept: "The highest temperature is in **August** (A)."
+                },
+                {
+                    q: "What is the approximate **Minimum Temperature** 🥶 (lowest point on the red line)?",
+                    a: "-22", options: ["0°C", "-10°C", "-15°C", "-22°C"],
+                    concept: "The lowest temperature is **-22°C** in February."
+                },
+                {
+                    q: "What is the approximate **Maximum Rainfall** 💧 value (highest blue bar)?",
+                    a: "40", options: ["20 mm", "30 mm", "40 mm", "70 mm"],
+                    concept: "The maximum rainfall is **40 mm** in August."
+                }
+            ]
         },
         {
-            q: "What is the approximate **Maximum Rainfall** 💧 value (highest blue bar)? (Enter the value in mm)",
-            a: "40", 
-            concept: "The maximum rainfall is the height of the tallest blue bar, which aligns with **40 mm** on the Rainfall axis (left Y-axis)."
-        },
-        {
-            q: "What is the approximate **Minimum Temperature** 🥶 (lowest point on the red line)? (Enter the value in °C, e.g., -20)",
-            a: "-22", 
-            concept: "The lowest point on the temperature line is in **February** (F) at approximately **-22°C**."
-        },
-        {
-            q: "The blue bars measure precipitation in what unit? (Enter the unit symbol)",
-            a: "mm",
-            concept: "The blue bars (Precipitation) are measured in **millimeters (mm)** on the left Y-axis."
+            name: "Maritime (Moderate/Wet)",
+            temp: [5, 4, 6, 9, 13, 16, 18, 17, 14, 11, 7, 5], // Max: 18, Min: 4. Range: 14 (Moderate)
+            precip: [110, 95, 105, 80, 75, 50, 40, 55, 90, 120, 150, 130], // Total: 1200 (Wet)
+            questions: [
+                {
+                    q: "What month is the **Maximum Temperature** 🌡️ (highest point on the red line)?",
+                    a: "J", options: ["January (J)", "June (J)", "July (J)", "December (D)"],
+                    concept: "The highest temperature is in **July** (J), at 18°C."
+                },
+                {
+                    q: "What is the approximate **Minimum Temperature** 🥶 (lowest point on the red line)?",
+                    a: "4", options: ["0°C", "4°C", "8°C", "-5°C"],
+                    concept: "The lowest temperature is **4°C** in February."
+                },
+                {
+                    q: "What is the approximate **Maximum Rainfall** 💧 value (highest blue bar)?",
+                    a: "150", options: ["100 mm", "120 mm", "150 mm", "200 mm"],
+                    concept: "The maximum rainfall is **150 mm** in November."
+                }
+            ]
         }
     ];
 
-    const classQuestions = [
-        {
-            range: 12, 
-            precip: 1400, 
-            a: "Maritime",
-            concept: "This is **Maritime 🌊** because the Annual Temperature Range (12°C) is **moderate** (< 25°C) AND the Total Annual Precipitation (1400 mm) is **wet** (> 1000 mm)."
-        },
-        {
-            range: 35, 
-            precip: 450, 
-            a: "Continental",
-            concept: "This is **Continental 🏔️** because the Annual Temperature Range (35°C) is **Extreme** (> 25°C) AND the Total Annual Precipitation (450 mm) is **dry** (< 1000 mm)."
-        },
-        {
-            range: 28, 
-            precip: 850, 
-            a: "Continental",
-            concept: "The **Extreme** Annual Temperature Range (28°C is > 25°C) is the key indicator for a **Continental 🏔️** climate."
-        },
-        {
-            range: 19, 
-            precip: 1100, 
-            a: "Maritime",
-            concept: "The **Moderate** Annual Temperature Range (19°C is < 25°C) and **Wet** Annual Precipitation (1100 mm is > 1000 mm) classify this as a **Maritime 🌊** climate."
-        }
+    // Static questions (don't depend on the graph data)
+    const STATIC_QUESTIONS = [
+        { q: "The blue bars measure precipitation in what unit?", a: "mm", options: ["°C", "Inches", "mm", "PPM"], concept: "The blue bars (Precipitation) are measured in **millimeters (mm)** on the left Y-axis." },
+        { q: "Which describes a **short-term** state of the atmosphere?", a: "WEATHER", options: ["Climate", "Annual Range", "Weather", "Tropical"], concept: "Correct! **Weather** describes the atmosphere moment-to-moment or over short periods. Climate is the long-term pattern." },
+        { q: "If the hottest month was 8°C and the coldest was -5°C, what is the Annual Temperature Range?", a: "13", options: ["3", "8", "13", "5"], concept: "The Annual Temperature Range is calculated as **8 - (-5) = 13**. (Formula Application)" }
+    ];
+
+    const ALL_CLASS_QUESTIONS = [
+        { range: 12, precip: 1400, a: "Maritime", concept: "This is **Maritime 🌊** because the Annual Temperature Range (12°C) is **moderate** (< 25°C) AND the Total Annual Precipitation (1400 mm) is **wet** (> 1000 mm)." },
+        { range: 35, precip: 450, a: "Continental", concept: "This is **Continental 🏔️** because the Annual Temperature Range (35°C) is **Extreme** (> 25°C) AND the Total Annual Precipitation (450 mm) is **dry** (< 1000 mm)." },
+        { range: 28, precip: 850, a: "Continental", concept: "The **Extreme** Annual Temperature Range (28°C is > 25°C) is the key indicator for a **Continental 🏔️** climate." },
+        { range: 19, precip: 1100, a: "Maritime", concept: "The **Moderate** Annual Temperature Range (19°C is < 25°C) and **Wet** Annual Precipitation (1100 mm is > 1000 mm) classify this as a **Maritime 🌊** climate." }
     ];
     
     const storyMoments = [
@@ -292,14 +366,40 @@
         }
     ];
 
+    let graphQuestions = [];
+    let classQuestions = [];
+
+    // --- Core Reset Function ---
+    function resetGame() {
+        // Reset score and progress
+        score = 0;
+        scoreElement.textContent = score;
+        currentGraphQIndex = 0;
+        currentClassQIndex = 0;
+        
+        // 1. RANDOMIZE CLIMATE DATA SET
+        const randomIndex = Math.floor(Math.random() * CLIMATE_DATA_SETS.length);
+        currentClimateData = CLIMATE_DATA_SETS[randomIndex];
+
+        // 2. BUILD THE GRAPH QUESTIONS ARRAY
+        // Combine static questions with the graph-specific questions
+        graphQuestions = [...currentClimateData.questions, ...STATIC_QUESTIONS];
+        
+        // 3. SHUFFLE BOTH QUESTION ARRAYS
+        graphQuestions.sort(() => Math.random() - 0.5);
+        classQuestions = [...ALL_CLASS_QUESTIONS];
+        classQuestions.sort(() => Math.random() - 0.5);
+
+        // Start the mission briefing
+        showStoryBreak(0);
+    }
+
     // --- Animation Function ---
     function triggerAnimation() {
-        // Use a different emoji for the second phase's visual feedback
         const emoji = (currentClassQIndex > 0 || currentGraphQIndex === graphQuestions.length) ? '💾' : '✅';
         animationFeedback.textContent = emoji;
         animationFeedback.classList.add('animate');
         
-        // Remove the class after the animation completes (1s) to allow it to run again
         setTimeout(() => {
             animationFeedback.classList.remove('animate');
         }, 1000);
@@ -341,7 +441,7 @@
     }
 
 
-    // --- Chart Generation (Unchanged) ---
+    // --- Chart Generation (Now uses currentClimateData) ---
     function generateClimateChart() {
         if (typeof Chart === 'undefined') {
             console.error("Chart.js library not loaded.");
@@ -350,7 +450,11 @@
 
         const ctx = document.getElementById('climateChart').getContext('2d');
         
-        const climateChart = new Chart(ctx, {
+        if (window.climateChartInstance) {
+            window.climateChartInstance.destroy();
+        }
+
+        window.climateChartInstance = new Chart(ctx, {
             type: 'bar', 
             data: {
                 labels: CHART_MONTHS,
@@ -358,7 +462,7 @@
                     {
                         type: 'bar',
                         label: 'Rainfall 💧 (mm)',
-                        data: PRECIP_DATA,
+                        data: currentClimateData.precip, // Use selected data
                         backgroundColor: 'rgba(54, 162, 235, 0.6)', 
                         yAxisID: 'yRain',
                         order: 1 
@@ -366,7 +470,7 @@
                     {
                         type: 'line',
                         label: 'Temperature 🌡️ (°C)',
-                        data: TEMP_DATA,
+                        data: currentClimateData.temp, // Use selected data
                         borderColor: 'rgb(255, 99, 132)', 
                         backgroundColor: 'rgba(255, 99, 132, 0.2)',
                         fill: false,
@@ -383,7 +487,8 @@
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Dynamic Climate Graph Analysis'
+                        // Show the name of the climate type being analyzed
+                        text: `Dynamic Climate Graph Analysis (${currentClimateData.name})`
                     },
                     legend: { display: true, position: 'top' }
                 },
@@ -392,12 +497,14 @@
                     yRain: {
                         type: 'linear', position: 'left',
                         title: { display: true, text: 'Rainfall (mm)' },
-                        min: 0, max: 70
+                        min: 0, 
+                        max: Math.max(...currentClimateData.precip, 70) * 1.1 // Adjust max rain based on data
                     },
                     yTemp: {
                         type: 'linear', position: 'right',
                         title: { display: true, text: 'Temperature (°C)' },
-                        min: -25, max: 10,  
+                        min: Math.min(...currentClimateData.temp, -25) * 1.1, // Adjust min temp based on data
+                        max: Math.max(...currentClimateData.temp, 10) * 1.1, // Adjust max temp based on data
                         grid: { drawOnChartArea: false }
                     }
                 }
@@ -406,7 +513,8 @@
     }
 
 
-    // --- Game Logic (Updated to call triggerAnimation) ---
+    // --- Game Logic: Multiple Choice Setup ---
+
     function loadGraphQuestion() {
         if (currentGraphQIndex >= graphQuestions.length) {
             showStoryBreak(1); 
@@ -414,39 +522,52 @@
         }
         const qData = graphQuestions[currentGraphQIndex];
         document.getElementById('graph-q-text').innerHTML = `**Question ${currentGraphQIndex + 1}:** ${qData.q}`;
-        document.getElementById('graph-answer-input').value = '';
-        document.getElementById('graph-feedback').style.display = 'none';
+        graphFeedback.style.display = 'none';
+
+        // Clear and populate MC buttons
+        mcOptionsGraph.innerHTML = '';
+        
+        qData.options.forEach(option => {
+            const btn = document.createElement('button');
+            btn.textContent = option;
+            btn.onclick = () => checkGraphAnswer(option);
+            mcOptionsGraph.appendChild(btn);
+        });
     }
 
-    function checkGraphAnswer() {
-        const input = document.getElementById('graph-answer-input').value.trim();
-        const feedbackBox = document.getElementById('graph-feedback');
+    function checkGraphAnswer(userSelection) {
         const qData = graphQuestions[currentGraphQIndex];
+        
+        let correctAnswer = qData.a.toUpperCase();
+        let isCorrect = userSelection.toUpperCase().includes(correctAnswer);
 
-        if (!input) {
-            feedbackBox.textContent = "Please enter an answer.";
-            feedbackBox.className = 'feedback-box incorrect';
-            feedbackBox.style.display = 'block';
-            return;
-        }
+        // Disable all buttons immediately after clicking
+        mcOptionsGraph.querySelectorAll('button').forEach(btn => btn.disabled = true);
 
-        if (input.toUpperCase() === qData.a.toUpperCase()) {
-            feedbackBox.innerHTML = `✅ **Correct!** ${qData.concept}`;
-            feedbackBox.className = 'feedback-box correct';
+        if (isCorrect) {
+            graphFeedback.innerHTML = `✅ **Correct!** ${qData.concept}`;
+            graphFeedback.className = 'feedback-box correct';
             score += 10; 
             scoreElement.textContent = score;
             
-            triggerAnimation(); // Trigger the visual burst!
+            triggerAnimation(); 
 
             currentGraphQIndex++;
-            // Delay for 1.5 seconds to let the animation play before loading the next question
-            setTimeout(loadGraphQuestion, 1500); 
+            setTimeout(() => {
+                mcOptionsGraph.querySelectorAll('button').forEach(btn => btn.disabled = false); // Re-enable for next q
+                loadGraphQuestion();
+            }, 1500); 
         } else {
-            feedbackBox.innerHTML = `❌ **Incorrect.** The correct answer is **${qData.a}**. <br><br> **Rule Reminder:** ${qData.concept}`;
-            feedbackBox.className = 'feedback-box incorrect';
-            // No animation for incorrect answer
+            graphFeedback.innerHTML = `❌ **Incorrect.** The correct answer is **${qData.a}**. <br><br> **Rule Reminder:** ${qData.concept}`;
+            graphFeedback.className = 'feedback-box incorrect';
+            
+            // Re-enable buttons after a short delay so user can try again on the same question
+            setTimeout(() => { 
+                mcOptionsGraph.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                graphFeedback.style.display = 'none'; 
+            }, 2500); 
         }
-        feedbackBox.style.display = 'block';
+        graphFeedback.style.display = 'block';
     }
 
     function loadClassQuestion() {
@@ -456,40 +577,63 @@
         }
         const qData = classQuestions[currentClassQIndex];
         document.getElementById('class-q-text').innerHTML = `**Classification Data ${currentClassQIndex + 1}:** <br> Annual Temperature Range: **${qData.range}°C 🌡️** <br> Total Annual Precipitation: **${qData.precip} mm 💧**`;
-        document.getElementById('class-feedback').style.display = 'none';
+        classFeedback.style.display = 'none';
+        
+        // Re-enable classification buttons
+        document.getElementById('mc-options-class').querySelectorAll('button').forEach(btn => btn.disabled = false);
     }
 
     function checkClassAnswer(userAnswer) {
-        const feedbackBox = document.getElementById('class-feedback');
         const qData = classQuestions[currentClassQIndex];
 
+        // Disable all buttons immediately after clicking
+        document.getElementById('mc-options-class').querySelectorAll('button').forEach(btn => btn.disabled = true);
+
         if (userAnswer === qData.a) {
-            feedbackBox.innerHTML = `✅ **Correct!** You categorized the data correctly. <br><br> **Classification Rule:** ${qData.concept}`;
-            feedbackBox.className = 'feedback-box correct';
+            classFeedback.innerHTML = `✅ **Correct!** You categorized the data correctly. <br><br> **Classification Rule:** ${qData.concept}`;
+            classFeedback.className = 'feedback-box correct';
             score += 20; 
             scoreElement.textContent = score;
 
-            triggerAnimation(); // Trigger the visual burst!
+            triggerAnimation(); 
 
             currentClassQIndex++;
-            // Delay for 1.5 seconds to let the animation play before loading the next question
-            setTimeout(loadClassQuestion, 1500); 
+            setTimeout(() => {
+                loadClassQuestion();
+            }, 1500); 
         } else {
-            feedbackBox.innerHTML = `❌ **Incorrect.** You chose ${userAnswer}. <br><br> **Classification Rule:** ${qData.concept}`;
-            feedbackBox.className = 'feedback-box incorrect';
-            // No animation for incorrect answer
+            classFeedback.innerHTML = `❌ **Incorrect.** You chose ${userAnswer}. <br><br> **Classification Rule:** ${qData.concept}`;
+            classFeedback.className = 'feedback-box incorrect';
+            
+            // Re-enable buttons after short delay
+             setTimeout(() => { 
+                document.getElementById('mc-options-class').querySelectorAll('button').forEach(btn => btn.disabled = false);
+                classFeedback.style.display = 'none'; 
+            }, 2500);
         }
-        feedbackBox.style.display = 'block';
+        classFeedback.style.display = 'block';
     }
+    
+    // --- Modal Functions (Cheat Sheet) ---
+    function openModal() {
+        document.getElementById('rulesModal').style.display = 'block';
+    }
+    function closeModal() {
+        document.getElementById('rulesModal').style.display = 'none';
+    }
+    // Close the modal if the user clicks anywhere outside of it
+    window.onclick = function(event) {
+        const modal = document.getElementById('rulesModal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
 
     // Initial loads
     window.onload = () => {
-        // Randomize questions for replayability
-        graphQuestions.sort(() => Math.random() - 0.5);
-        classQuestions.sort(() => Math.random() - 0.5);
-        
-        // Start the game with the Mission Briefing
-        showStoryBreak(0); 
+        // Run the reset function immediately to shuffle and start the game
+        resetGame();
     };
 </script>
 
