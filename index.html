@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grade 9 Climate Data Interpreter</title>
     
-    <!-- 1. LINK CHART.JS LIBRARY (Only the main file is needed now) -->
+    <!-- 1. LINK CHART.JS LIBRARY -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <style>
@@ -24,7 +24,7 @@
             background: #ffffff;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
         h1 {
             color: #007bff;
@@ -75,6 +75,7 @@
         }
         button:hover {
             background-color: #0056b3;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .score {
             text-align: right;
@@ -88,10 +89,62 @@
             flex-direction: column;
             gap: 20px;
         }
-        /* Ensure the canvas is responsive */
-        #climateChart {
-            max-width: 100%;
-            height: auto;
+        /* Story Box Styles */
+        .story-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .story-box h2 {
+            color: #856404;
+            border-bottom: 2px solid #856404;
+        }
+        .story-box p {
+            font-size: 1.1em;
+            margin: 15px 0 25px 0;
+        }
+        .story-box button {
+            background-color: #ffc107;
+            color: #333;
+            font-weight: bold;
+        }
+        .story-box button:hover {
+            background-color: #e0a800;
+        }
+
+        /* --- NEW ANIMATION STYLES --- */
+        #animation-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s;
+            z-index: 1000;
+        }
+
+        @keyframes data-burst {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .animate {
+            animation: data-burst 1s ease-out forwards;
         }
     </style>
 </head>
@@ -101,34 +154,55 @@
     <h1>🌍 Climate Data Interpreter 📊</h1>
     <p>Practice reading climate graphs and applying classification rules!</p>
     <div class="score">Score: <span id="scoreValue">0</span></div>
+    
+    <!-- NEW ANIMATION ELEMENT -->
+    <div id="animation-feedback">✅</div>
 
     <!-- The Game Content Goes Here -->
     <div class="game-area">
-
-        <!-- Climate Graph (Dynamically generated) -->
-        <h2>Graph Interpretation Challenge</h2>
-        <p>Answer the questions based on the climate graph generated below:</p>
         
-        <!-- 2. CANVAS ELEMENT FOR CHART.JS -->
-        <div style="height: 350px; width: 100%; margin-bottom: 20px;">
-            <canvas id="climateChart"></canvas>
+        <!-- Story/Break Container -->
+        <div id="story-box" class="story-box" style="display: none;">
+            <h2 id="story-title"></h2>
+            <p id="story-text"></p>
+            <button id="story-button" onclick="handleStoryContinue()">Continue Mission</button>
+        </div>
+        
+        <!-- Climate Graph (Dynamically generated) -->
+        <div id="graph-section" style="display: none;">
+            <h2>Graph Interpretation Challenge</h2>
+            <p>Analyze the climate data below to secure the first data set:</p>
+            
+            <!-- CANVAS ELEMENT FOR CHART.JS -->
+            <div style="height: 350px; width: 100%; margin-bottom: 20px;">
+                <canvas id="climateChart"></canvas>
+            </div>
+    
+            <div id="graph-question" class="question-box">
+                <p id="graph-q-text">Loading question...</p>
+                <input type="text" id="graph-answer-input" placeholder="Enter month/value (e.g., J or -10)">
+                <button onclick="checkGraphAnswer()">Submit</button>
+                <div id="graph-feedback" class="feedback-box"></div>
+            </div>
         </div>
 
-        <div id="graph-question" class="question-box">
-            <p id="graph-q-text">Loading question...</p>
-            <input type="text" id="graph-answer-input" placeholder="Enter month/value (e.g., J or 10)">
-            <button onclick="checkGraphAnswer()">Submit</button>
-            <div id="graph-feedback" class="feedback-box"></div>
-        </div>
 
         <!-- Classification Challenge -->
-        <h2>Classification Challenge (Maritime vs. Continental)</h2>
-        <div id="class-question" class="question-box">
-            <p id="class-q-text">Loading data...</p>
-            <p>Classify this climate type:</p>
-            <button onclick="checkClassAnswer('Maritime')">Maritime</button>
-            <button onclick="checkClassAnswer('Continental')">Continental</button>
-            <div id="class-feedback" class="feedback-box"></div>
+        <div id="class-section" style="display: none;">
+            <h2>Classification Challenge 🏔️🌊</h2>
+            <p>You must correctly classify the climate types to prevent data corruption:</p>
+            <div id="class-question" class="question-box">
+                <p id="class-q-text">Loading data...</p>
+                <p>Classify this climate type:</p>
+                <button onclick="checkClassAnswer('Maritime')">Maritime 🌊</button>
+                <button onclick="checkClassAnswer('Continental')">Continental 🏔️</button>
+                <div id="class-feedback" class="feedback-box"></div>
+            </div>
+        </div>
+
+        <div id="game-complete" class="story-box" style="display: none;">
+            <h2>MISSION SUCCESSFUL! 🎉</h2>
+            <p>You have secured all climate data! Your final score is <span id="finalScore" class="font-bold"></span>. You are officially a certified Climate Data Analyst.</p>
         </div>
 
     </div>
@@ -138,97 +212,160 @@
 <script>
     let score = 0;
     const scoreElement = document.getElementById('scoreValue');
+    let currentGraphQIndex = 0;
+    let currentClassQIndex = 0;
 
+    // --- DOM Elements ---
+    const storyBox = document.getElementById('story-box');
+    const graphSection = document.getElementById('graph-section');
+    const classSection = document.getElementById('class-section');
+    const gameComplete = document.getElementById('game-complete');
+    const animationFeedback = document.getElementById('animation-feedback'); // New element
+
+    // --- Game Data ---
+    const CHART_MONTHS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+    const TEMP_DATA = [-20, -22, -16, -10, -5, 2, 8, 9, 7, 0, -10, -18]; 
+    const PRECIP_DATA = [10, 8, 12, 16, 20, 25, 30, 40, 35, 28, 18, 12];
+    
     const graphQuestions = [
-        // Questions based on the dynamically generated data
         {
-            q: "What month is the **Maximum Temperature** (highest point on the line)? (Enter the first letter of the month)",
-            a: "A", // August has 9°C
-            concept: "The highest point on the temperature line (the curve) represents the warmest month, which is **August** (9°C)."
+            q: "What month is the **Maximum Temperature** 🌡️ (highest point on the red line)? (Enter the first letter of the month)",
+            a: "A", 
+            concept: "The highest point on the temperature line (the red curve) is in **August** (A), showing the warmest monthly average."
         },
         {
-            q: "What is the approximate **Maximum Rainfall** value (highest bar)? (Enter the value in mm)",
-            a: "40", // August has 40mm
+            q: "What is the approximate **Maximum Rainfall** 💧 value (highest blue bar)? (Enter the value in mm)",
+            a: "40", 
             concept: "The maximum rainfall is the height of the tallest blue bar, which aligns with **40 mm** on the Rainfall axis (left Y-axis)."
         },
         {
-            q: "What is the approximate **Minimum Temperature** (lowest point on the line)? (Enter the value in °C, e.g., -20)",
-            a: "-22", // February has -22°C
-            concept: "The lowest point on the temperature line (the curve) represents the coldest monthly average, which is approximately **-22°C** (February)."
+            q: "What is the approximate **Minimum Temperature** 🥶 (lowest point on the red line)? (Enter the value in °C, e.g., -20)",
+            a: "-22", 
+            concept: "The lowest point on the temperature line is in **February** (F) at approximately **-22°C**."
         },
         {
-            q: "The line graph measures temperature in what unit? (Enter the unit symbol)",
-            a: "°C",
-            concept: "The line graph measures temperature in **Degrees Celsius (°C)** on the right Y-axis."
+            q: "The blue bars measure precipitation in what unit? (Enter the unit symbol)",
+            a: "mm",
+            concept: "The blue bars (Precipitation) are measured in **millimeters (mm)** on the left Y-axis."
         }
     ];
 
     const classQuestions = [
         {
-            range: 12, // < 25
-            precip: 1400, // > 1000
+            range: 12, 
+            precip: 1400, 
             a: "Maritime",
-            concept: "This is **Maritime** because the Annual Temperature Range (12°C) is **moderate** (< 25°C) AND the Total Annual Precipitation (1400 mm) is **wet** (> 1000 mm). Maritime climates are near large bodies of water."
+            concept: "This is **Maritime 🌊** because the Annual Temperature Range (12°C) is **moderate** (< 25°C) AND the Total Annual Precipitation (1400 mm) is **wet** (> 1000 mm)."
         },
         {
-            range: 35, // > 25
-            precip: 450, // < 1000
+            range: 35, 
+            precip: 450, 
             a: "Continental",
-            concept: "This is **Continental** because the Annual Temperature Range (35°C) is **Extreme** (> 25°C) AND the Total Annual Precipitation (450 mm) is **dry** (< 1000 mm). Continental climates are far inland."
+            concept: "This is **Continental 🏔️** because the Annual Temperature Range (35°C) is **Extreme** (> 25°C) AND the Total Annual Precipitation (450 mm) is **dry** (< 1000 mm)."
         },
         {
-            range: 28, // > 25
-            precip: 850, // < 1000
+            range: 28, 
+            precip: 850, 
             a: "Continental",
-            concept: "The **Extreme** Annual Temperature Range (28°C is > 25°C) is the key indicator for a **Continental** climate."
+            concept: "The **Extreme** Annual Temperature Range (28°C is > 25°C) is the key indicator for a **Continental 🏔️** climate."
         },
         {
-            range: 19, // < 25
-            precip: 1100, // > 1000
+            range: 19, 
+            precip: 1100, 
             a: "Maritime",
-            concept: "The **Moderate** Annual Temperature Range (19°C is < 25°C) and **Wet** Annual Precipitation (1100 mm is > 1000 mm) classify this as a **Maritime** climate."
+            concept: "The **Moderate** Annual Temperature Range (19°C is < 25°C) and **Wet** Annual Precipitation (1100 mm is > 1000 mm) classify this as a **Maritime 🌊** climate."
+        }
+    ];
+    
+    const storyMoments = [
+        {
+            title: "🌍 Mission Briefing: Climate Analyst",
+            text: "Your goal is to save the Global Climate Data Archive! We've intercepted corrupted data, and you must analyze the core climate graphs and classify them correctly before the next storm hits. Your first task: **Graph Interpretation**.",
+            button: "Start Graph Challenge 📊",
+            nextAction: 'startGraph'
+        },
+        {
+            title: "✅ Data Set One Secured!",
+            text: "Great work, Analyst! You correctly interpreted the visuals and secured the initial readings. Now, you must categorize the data using the **Classification Rules**. This is where you apply the formula! Remember: Maritime is **Moderate & Wet**, Continental is **Extreme & Dry**.",
+            button: "Start Classification 🛰️",
+            nextAction: 'startClass'
         }
     ];
 
-    let currentGraphQIndex = 0;
-    let currentClassQIndex = 0;
+    // --- Animation Function ---
+    function triggerAnimation() {
+        // Use a different emoji for the second phase's visual feedback
+        const emoji = (currentClassQIndex > 0 || currentGraphQIndex === graphQuestions.length) ? '💾' : '✅';
+        animationFeedback.textContent = emoji;
+        animationFeedback.classList.add('animate');
+        
+        // Remove the class after the animation completes (1s) to allow it to run again
+        setTimeout(() => {
+            animationFeedback.classList.remove('animate');
+        }, 1000);
+    }
 
-    // Data for dynamic chart generation
-    const CHART_MONTHS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
-    const TEMP_DATA = [-20, -22, -16, -10, -5, 2, 8, 9, 7, 0, -10, -18]; 
-    const PRECIP_DATA = [10, 8, 12, 16, 20, 25, 30, 40, 35, 28, 18, 12];
+
+    // --- Game Flow Control ---
+    function showStoryBreak(index) {
+        const moment = storyMoments[index];
+        graphSection.style.display = 'none';
+        classSection.style.display = 'none';
+        gameComplete.style.display = 'none';
+        storyBox.style.display = 'block';
+
+        document.getElementById('story-title').textContent = moment.title;
+        document.getElementById('story-text').innerHTML = moment.text;
+        document.getElementById('story-button').textContent = moment.button;
+        document.getElementById('story-button').onclick = () => handleStoryContinue(moment.nextAction);
+    }
+    
+    function handleStoryContinue(action) {
+        storyBox.style.display = 'none';
+        if (action === 'startGraph') {
+            graphSection.style.display = 'block';
+            generateClimateChart();
+            loadGraphQuestion();
+        } else if (action === 'startClass') {
+            classSection.style.display = 'block';
+            loadClassQuestion();
+        }
+    }
+    
+    function showGameComplete() {
+        graphSection.style.display = 'none';
+        classSection.style.display = 'none';
+        storyBox.style.display = 'none';
+        gameComplete.style.display = 'block';
+        document.getElementById('finalScore').textContent = score;
+    }
 
 
-    // 3. JAVASCRIPT FUNCTION TO BUILD THE CHART
+    // --- Chart Generation (Unchanged) ---
     function generateClimateChart() {
-        // Ensure Chart object exists before proceeding
         if (typeof Chart === 'undefined') {
-            console.error("Chart.js library not loaded. Check script link in <head>.");
+            console.error("Chart.js library not loaded.");
             return;
         }
 
         const ctx = document.getElementById('climateChart').getContext('2d');
         
-        // NO PLUGIN REGISTRATION NEEDED HERE - SIMPLIFIES CODE
-
         const climateChart = new Chart(ctx, {
             type: 'bar', 
             data: {
                 labels: CHART_MONTHS,
                 datasets: [
                     {
-                        // Rainfall (mm) - Left Axis (Bars)
                         type: 'bar',
-                        label: 'Rainfall (mm)',
+                        label: 'Rainfall 💧 (mm)',
                         data: PRECIP_DATA,
                         backgroundColor: 'rgba(54, 162, 235, 0.6)', 
                         yAxisID: 'yRain',
-                        order: 1 // Draw bars first
+                        order: 1 
                     },
                     {
-                        // Temperature (°C) - Right Axis (Line)
                         type: 'line',
-                        label: 'Temperature (°C)',
+                        label: 'Temperature 🌡️ (°C)',
                         data: TEMP_DATA,
                         borderColor: 'rgb(255, 99, 132)', 
                         backgroundColor: 'rgba(255, 99, 132, 0.2)',
@@ -236,7 +373,7 @@
                         yAxisID: 'yTemp',
                         tension: 0.2, 
                         pointRadius: 5,
-                        order: 0 // Draw line on top
+                        order: 0 
                     }
                 ]
             },
@@ -246,44 +383,22 @@
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Dynamic Climate Graph (Temperature Line & Rainfall Bars)'
+                        text: 'Dynamic Climate Graph Analysis'
                     },
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    }
+                    legend: { display: true, position: 'top' }
                 },
                 scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Month'
-                        }
-                    },
+                    x: { title: { display: true, text: 'Month' } },
                     yRain: {
-                        // Left Y-axis for Rainfall (mm)
-                        type: 'linear',
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: 'Rainfall (mm)'
-                        },
-                        min: 0,
-                        max: 70
+                        type: 'linear', position: 'left',
+                        title: { display: true, text: 'Rainfall (mm)' },
+                        min: 0, max: 70
                     },
                     yTemp: {
-                        // Right Y-axis for Temperature (°C)
-                        type: 'linear',
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: 'Temperature (°C)'
-                        },
-                        min: -25, 
-                        max: 10,  
-                        grid: {
-                            drawOnChartArea: false, // Prevents grid lines from right axis
-                        }
+                        type: 'linear', position: 'right',
+                        title: { display: true, text: 'Temperature (°C)' },
+                        min: -25, max: 10,  
+                        grid: { drawOnChartArea: false }
                     }
                 }
             }
@@ -291,11 +406,10 @@
     }
 
 
+    // --- Game Logic (Updated to call triggerAnimation) ---
     function loadGraphQuestion() {
         if (currentGraphQIndex >= graphQuestions.length) {
-            document.getElementById('graph-q-text').textContent = "Graph Challenge Complete! Well done.";
-            document.getElementById('graph-answer-input').style.display = 'none';
-            document.querySelector('#graph-question button').style.display = 'none';
+            showStoryBreak(1); 
             return;
         }
         const qData = graphQuestions[currentGraphQIndex];
@@ -319,26 +433,29 @@
         if (input.toUpperCase() === qData.a.toUpperCase()) {
             feedbackBox.innerHTML = `✅ **Correct!** ${qData.concept}`;
             feedbackBox.className = 'feedback-box correct';
-            score += 1;
+            score += 10; 
             scoreElement.textContent = score;
+            
+            triggerAnimation(); // Trigger the visual burst!
+
             currentGraphQIndex++;
-            setTimeout(loadGraphQuestion, 3000); 
+            // Delay for 1.5 seconds to let the animation play before loading the next question
+            setTimeout(loadGraphQuestion, 1500); 
         } else {
-            feedbackBox.innerHTML = `❌ **Incorrect.** The correct answer is **${qData.a}**. <br><br> **Concept Rule:** ${qData.concept}`;
+            feedbackBox.innerHTML = `❌ **Incorrect.** The correct answer is **${qData.a}**. <br><br> **Rule Reminder:** ${qData.concept}`;
             feedbackBox.className = 'feedback-box incorrect';
+            // No animation for incorrect answer
         }
         feedbackBox.style.display = 'block';
     }
 
     function loadClassQuestion() {
         if (currentClassQIndex >= classQuestions.length) {
-            document.getElementById('class-q-text').textContent = "Classification Challenge Complete! Excellent work.";
-            document.querySelector('#class-question button:nth-of-type(1)').style.display = 'none';
-            document.querySelector('#class-question button:nth-of-type(2)').style.display = 'none';
+            showGameComplete();
             return;
         }
         const qData = classQuestions[currentClassQIndex];
-        document.getElementById('class-q-text').innerHTML = `**Data for Location ${currentClassQIndex + 1}:** <br> Annual Temperature Range: **${qData.range}°C** <br> Total Annual Precipitation: **${qData.precip} mm**`;
+        document.getElementById('class-q-text').innerHTML = `**Classification Data ${currentClassQIndex + 1}:** <br> Annual Temperature Range: **${qData.range}°C 🌡️** <br> Total Annual Precipitation: **${qData.precip} mm 💧**`;
         document.getElementById('class-feedback').style.display = 'none';
     }
 
@@ -347,30 +464,32 @@
         const qData = classQuestions[currentClassQIndex];
 
         if (userAnswer === qData.a) {
-            feedbackBox.innerHTML = `✅ **Correct!** <br><br> **Classification Rule:** ${qData.concept}`;
+            feedbackBox.innerHTML = `✅ **Correct!** You categorized the data correctly. <br><br> **Classification Rule:** ${qData.concept}`;
             feedbackBox.className = 'feedback-box correct';
-            score += 2; 
+            score += 20; 
             scoreElement.textContent = score;
+
+            triggerAnimation(); // Trigger the visual burst!
+
             currentClassQIndex++;
-            setTimeout(loadClassQuestion, 4000); 
+            // Delay for 1.5 seconds to let the animation play before loading the next question
+            setTimeout(loadClassQuestion, 1500); 
         } else {
             feedbackBox.innerHTML = `❌ **Incorrect.** You chose ${userAnswer}. <br><br> **Classification Rule:** ${qData.concept}`;
             feedbackBox.className = 'feedback-box incorrect';
+            // No animation for incorrect answer
         }
         feedbackBox.style.display = 'block';
     }
 
     // Initial loads
     window.onload = () => {
-        // Draw the chart when the page loads
-        generateClimateChart(); 
-        
         // Randomize questions for replayability
         graphQuestions.sort(() => Math.random() - 0.5);
         classQuestions.sort(() => Math.random() - 0.5);
         
-        loadGraphQuestion();
-        loadClassQuestion();
+        // Start the game with the Mission Briefing
+        showStoryBreak(0); 
     };
 </script>
 
