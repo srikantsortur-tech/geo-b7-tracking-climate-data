@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grade 9 Climate Data Interpreter</title>
     
+    <!-- 1. LINK CHART.JS LIBRARY (Only the main file is needed now) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script> 
 
     <style>
         body {
@@ -88,6 +88,11 @@
             flex-direction: column;
             gap: 20px;
         }
+        /* Ensure the canvas is responsive */
+        #climateChart {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -97,11 +102,14 @@
     <p>Practice reading climate graphs and applying classification rules!</p>
     <div class="score">Score: <span id="scoreValue">0</span></div>
 
+    <!-- The Game Content Goes Here -->
     <div class="game-area">
 
+        <!-- Climate Graph (Dynamically generated) -->
         <h2>Graph Interpretation Challenge</h2>
         <p>Answer the questions based on the climate graph generated below:</p>
         
+        <!-- 2. CANVAS ELEMENT FOR CHART.JS -->
         <div style="height: 350px; width: 100%; margin-bottom: 20px;">
             <canvas id="climateChart"></canvas>
         </div>
@@ -113,6 +121,7 @@
             <div id="graph-feedback" class="feedback-box"></div>
         </div>
 
+        <!-- Classification Challenge -->
         <h2>Classification Challenge (Maritime vs. Continental)</h2>
         <div id="class-question" class="question-box">
             <p id="class-q-text">Loading data...</p>
@@ -123,7 +132,8 @@
         </div>
 
     </div>
-    </div>
+    <!-- End Game Content -->
+</div>
 
 <script>
     let score = 0;
@@ -139,7 +149,7 @@
         {
             q: "What is the approximate **Maximum Rainfall** value (highest bar)? (Enter the value in mm)",
             a: "40", // August has 40mm
-            concept: "The maximum rainfall is the height of the tallest blue bar, which aligns with **40 mm** on the right y-axis (Rainfall)."
+            concept: "The maximum rainfall is the height of the tallest blue bar, which aligns with **40 mm** on the Rainfall axis (left Y-axis)."
         },
         {
             q: "What is the approximate **Minimum Temperature** (lowest point on the line)? (Enter the value in °C, e.g., -20)",
@@ -149,34 +159,34 @@
         {
             q: "The line graph measures temperature in what unit? (Enter the unit symbol)",
             a: "°C",
-            concept: "The right y-axis (Temperature) is measured in **Degrees Celsius (°C)**."
+            concept: "The line graph measures temperature in **Degrees Celsius (°C)** on the right Y-axis."
         }
     ];
 
     const classQuestions = [
         {
-            range: 12, 
-            precip: 1400, 
+            range: 12, // < 25
+            precip: 1400, // > 1000
             a: "Maritime",
-            [cite_start]concept: "This is **Maritime** because the Annual Temperature Range (12°C) is **moderate** (less than 25°C) AND the Total Annual Precipitation (1400 mm) is **wet** (greater than 1000 mm). Maritime climates are near a large body of water. [cite: 61, 62, 63, 64, 65, 66]"
+            concept: "This is **Maritime** because the Annual Temperature Range (12°C) is **moderate** (< 25°C) AND the Total Annual Precipitation (1400 mm) is **wet** (> 1000 mm). Maritime climates are near large bodies of water."
         },
         {
-            range: 35, 
-            precip: 450, 
+            range: 35, // > 25
+            precip: 450, // < 1000
             a: "Continental",
-            concept: "This is **Continental** because the Annual Temperature Range (35°C) is **Extreme** (greater than 25°C) AND the Total Annual Precipitation (450 mm) is **dry** (less than 1000 mm). [cite_start]Continental climates are far from a large body of water. [cite: 68, 70, 71, 72]"
+            concept: "This is **Continental** because the Annual Temperature Range (35°C) is **Extreme** (> 25°C) AND the Total Annual Precipitation (450 mm) is **dry** (< 1000 mm). Continental climates are far inland."
         },
         {
-            range: 28, 
-            precip: 850, 
+            range: 28, // > 25
+            precip: 850, // < 1000
             a: "Continental",
-            [cite_start]concept: "The **Extreme** Annual Temperature Range (28°C is > 25°C) is the key indicator for a **Continental** climate, which is also typically dry (850 mm < 1000 mm). [cite: 68, 70]"
+            concept: "The **Extreme** Annual Temperature Range (28°C is > 25°C) is the key indicator for a **Continental** climate."
         },
         {
-            range: 19, 
-            precip: 1100, 
+            range: 19, // < 25
+            precip: 1100, // > 1000
             a: "Maritime",
-            [cite_start]concept: "The **Moderate** Annual Temperature Range (19°C is < 25°C) and **Wet** Annual Precipitation (1100 mm is > 1000 mm) classify this as a **Maritime** climate. [cite: 61, 62, 63, 64, 65, 66]"
+            concept: "The **Moderate** Annual Temperature Range (19°C is < 25°C) and **Wet** Annual Precipitation (1100 mm is > 1000 mm) classify this as a **Maritime** climate."
         }
     ];
 
@@ -188,12 +198,18 @@
     const TEMP_DATA = [-20, -22, -16, -10, -5, 2, 8, 9, 7, 0, -10, -18]; 
     const PRECIP_DATA = [10, 8, 12, 16, 20, 25, 30, 40, 35, 28, 18, 12];
 
-    Chart.register(ChartDataLabels);
+
     // 3. JAVASCRIPT FUNCTION TO BUILD THE CHART
     function generateClimateChart() {
+        // Ensure Chart object exists before proceeding
+        if (typeof Chart === 'undefined') {
+            console.error("Chart.js library not loaded. Check script link in <head>.");
+            return;
+        }
+
         const ctx = document.getElementById('climateChart').getContext('2d');
         
-        //Chart.register(ChartDataLabels); // Register plugin
+        // NO PLUGIN REGISTRATION NEEDED HERE - SIMPLIFIES CODE
 
         const climateChart = new Chart(ctx, {
             type: 'bar', 
@@ -201,13 +217,16 @@
                 labels: CHART_MONTHS,
                 datasets: [
                     {
+                        // Rainfall (mm) - Left Axis (Bars)
                         type: 'bar',
                         label: 'Rainfall (mm)',
                         data: PRECIP_DATA,
                         backgroundColor: 'rgba(54, 162, 235, 0.6)', 
                         yAxisID: 'yRain',
+                        order: 1 // Draw bars first
                     },
                     {
+                        // Temperature (°C) - Right Axis (Line)
                         type: 'line',
                         label: 'Temperature (°C)',
                         data: TEMP_DATA,
@@ -215,8 +234,9 @@
                         backgroundColor: 'rgba(255, 99, 132, 0.2)',
                         fill: false,
                         yAxisID: 'yTemp',
-                        tension: 0.2, // Smoothes the line
-                        pointRadius: 5
+                        tension: 0.2, 
+                        pointRadius: 5,
+                        order: 0 // Draw line on top
                     }
                 ]
             },
@@ -241,6 +261,7 @@
                         }
                     },
                     yRain: {
+                        // Left Y-axis for Rainfall (mm)
                         type: 'linear',
                         position: 'left',
                         title: {
@@ -251,16 +272,17 @@
                         max: 70
                     },
                     yTemp: {
+                        // Right Y-axis for Temperature (°C)
                         type: 'linear',
                         position: 'right',
                         title: {
                             display: true,
                             text: 'Temperature (°C)'
                         },
-                        min: -25, // Corrected scale minimum
-                        max: 10,  // Corrected scale maximum
+                        min: -25, 
+                        max: 10,  
                         grid: {
-                            drawOnChartArea: false, 
+                            drawOnChartArea: false, // Prevents grid lines from right axis
                         }
                     }
                 }
