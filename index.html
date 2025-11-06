@@ -12,6 +12,7 @@
             --continental-color: #F59E0B; /* Amber-500 */
             --success-color: #10B981; /* Emerald-500 */
             --fail-color: #EF4444; /* Red-500 */
+            --default-border-color: #9CA3AF;
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -19,7 +20,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 900px;
+            max-width: 950px;
             margin: 0 auto;
         }
         .section-box {
@@ -33,14 +34,14 @@
             padding: 10px 12px;
             border: 1px solid #e5e7eb;
             text-align: center;
+            vertical-align: top;
         }
-        /* Increased visual impact for the core difference */
         .cheat-sheet-table .maritime { color: var(--maritime-color); font-weight: 700; font-size: 1.1em; }
         .cheat-sheet-table .continental { color: var(--continental-color); font-weight: 700; font-size: 1.1em; }
 
         .question-box {
             border: 3px solid var(--maritime-color);
-            background-color: #E0F2FE; /* Light blue background for emphasis */
+            background-color: #E0F2FE;
             border-radius: 12px;
             padding: 25px;
             min-height: 140px;
@@ -52,7 +53,7 @@
             margin-bottom: 20px;
         }
         .question-text {
-            font-size: 1.75rem; /* Larger font size for main question */
+            font-size: 1.75rem;
             font-weight: 800;
             color: #1f2937;
             margin-bottom: 20px;
@@ -60,14 +61,14 @@
         .option-button {
             transition: all 0.15s ease-in-out;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            font-size: 1.25rem; /* Larger option text */
+            font-size: 1.25rem;
             padding: 15px 20px;
             border-width: 3px;
         }
-        .option-button:hover {
+        .option-button:hover:not(:disabled) {
             transform: scale(1.02);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-            border-color: var(--success-color); /* Highlight border on hover */
+            border-color: var(--success-color);
         }
         .correct-answer {
             background-color: var(--success-color) !important;
@@ -100,13 +101,92 @@
             font-size: 1.1rem;
         }
         .result-correct {
-            background-color: #D1FAE5; /* Light green */
+            background-color: #D1FAE5;
             color: var(--success-color);
         }
         .result-incorrect {
-            background-color: #FEE2E2; /* Light red */
+            background-color: #FEE2E2;
             color: var(--fail-color);
         }
+
+        /* Graph Identifier Specific Styles */
+        .graph-container {
+            position: relative;
+            margin: 20px auto;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 700px;
+            height: 0;
+            padding-bottom: calc(470 / 700 * 100%); 
+            background-color: #fff; /* White background for the graph area */
+        }
+        
+        /* Pure CSS Graph Elements */
+        .css-graph {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+        }
+        /* Graph Box & Axes Area */
+        .graph-area {
+            position: absolute;
+            top: 10%; left: 12%; width: 76%; height: 75%;
+            border-left: 2px solid #000;
+            border-bottom: 2px solid #000;
+        }
+        /* Symbolic Precipitation Bars (blue columns) */
+        .precip-visual {
+            position: absolute;
+            bottom: 0;
+            width: calc(100% / 12 - 4px); /* 12 months, little gap */
+            background-color: #60A5FA; /* Blue for rain */
+            height: 60%; /* Visual representation of data */
+            margin-left: 2px;
+            opacity: 0.8;
+        }
+        /* Symbolic Temperature Line (Red curve) */
+        .temp-visual {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            height: 100%;
+            width: 100%;
+        }
+        .temp-line-path {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #EF4444; /* Red for temperature */
+            -webkit-clip-path: polygon(0 80%, 10% 70%, 20% 60%, 30% 50%, 40% 40%, 50% 30%, 60% 35%, 70% 45%, 80% 55%, 90% 65%, 100% 75%);
+            clip-path: polygon(0 80%, 10% 70%, 20% 60%, 30% 50%, 40% 40%, 50% 30%, 60% 35%, 70% 45%, 80% 55%, 90% 65%, 100% 75%);
+            opacity: 0.7;
+        }
+        
+        /* Ensure targets are above the visual elements */
+        .target {
+            z-index: 20; 
+        }
+        .css-graph > div:not(.target) {
+            z-index: 1; /* Keep visual elements below targets */
+        }
+
+        /* Targets based on PDF image geometry */
+        .temp-axis { top: 10%; left: 0%; width: 12%; height: 75%; }
+        .rainfall-axis { top: 10%; right: 0%; width: 12%; height: 75%; }
+        .x-axis-labels { bottom: 0%; left: 12%; width: 76%; height: 18%; }
+        .temp-line { top: 10%; left: 12%; width: 76%; height: 40%; }
+        .precip-bars { top: 45%; left: 12%; width: 76%; height: 40%; }
+        
+        .target.correct-graph {
+            border-color: var(--success-color) !important;
+            background: rgba(16, 185, 129, 0.4) !important;
+        }
+        .target.incorrect-graph {
+            border-color: var(--fail-color) !important;
+            background: rgba(239, 68, 68, 0.4) !important;
+            animation: shake 0.5s;
+        }
+        
     </style>
 </head>
 <body>
@@ -116,15 +196,15 @@
             💯 Climate Test Prep Console
         </h1>
 
-        <!-- Visual Cheat Sheet Section -->
         <div class="section-box border-b-4 border-indigo-500">
             <h2 class="text-2xl font-bold text-indigo-700 mb-4 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.409 9.577 5 8.288 5h-2.484C4.428 5 3 6.67 3 8.5v10C3 20.33 4.428 22 5.804 22h2.484c1.289 0 2.544-.409 3.712-1.183m0-13C13.168 5.409 14.423 5 15.712 5h2.484C19.572 5 21 6.67 21 8.5v10c0 1.83-1.428 3.5-2.804 3.5h-2.484c-1.289 0-2.544-.409-3.712-1.183"/>
                 </svg>
-                Visual Cheat Sheet
+                Visual Cheat Sheet & Reference
             </h2>
-            <div class="overflow-x-auto">
+            
+            <div class="overflow-x-auto mb-4">
                 <table class="cheat-sheet-table w-full text-base text-gray-600">
                     <thead class="bg-gray-100">
                         <tr>
@@ -141,7 +221,7 @@
                         </tr>
                         <tr>
                             <td class="font-medium text-gray-800">Temp Range (ATR)</td>
-                            <td class="maritime">Moderate (< 25°C)</td>
+                            <td class="maritime">Moderate (&lt; 25°C)</td>
                             <td class="continental">Extreme (> 25°C)</td>
                         </tr>
                         <tr>
@@ -150,197 +230,319 @@
                             <td class="continental">Dry (< 1000 mm)</td>
                         </tr>
                         <tr>
-                            <td class="font-medium text-gray-800">Key Concept</td>
-                            <td colspan="2" class="text-sm font-bold text-gray-700">CLIMATE = LONG-TERM PATTERNS (Decades/Centuries)</td>
+                            <td colspan="3" class="text-sm font-bold bg-gray-50 text-gray-700">
+                                CLIMATE = LONG-TERM PATTERNS | ATR = MAX TEMP - MIN TEMP
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+            
+            <div class="flex justify-center space-x-4 mt-6">
+                <button onclick="setMode('fact')" id="factBlitzButton" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold button-shadow hover:bg-blue-700">
+                    Fact Blitz Quiz
+                </button>
+                <button onclick="setMode('graph')" id="graphIdButton" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold button-shadow hover:bg-indigo-700">
+                    Graph Identifier Challenge
+                </button>
+            </div>
         </div>
 
-        <!-- Quiz Section -->
         <div class="section-box border-t-4 border-success-color" id="quizSection">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-gray-700">Quiz Progress: <span id="currentQuestionNum">0</span> / <span id="totalQuestions">20</span></h2>
+            <div id="quizHeader" class="flex justify-between items-center mb-4 hidden">
+                <h2 class="text-xl font-bold text-gray-700">
+                    <span id="quizModeTitle">Fact Blitz</span> Progress:
+                    <span id="currentQuestionNum">0</span> / <span id="totalQuestions"></span>
+                </h2>
                 <div class="text-2xl font-extrabold text-gray-800">Score: <span id="scoreDisplay" class="text-success-color">0</span></div>
             </div>
 
             <div id="quizContent" class="hidden">
-                <div class="question-box">
-                    <p id="questionText" class="question-text">Question goes here...</p>
-                    <div id="optionsContainer" class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 w-full max-w-lg">
-                        <!-- Options populated by JS -->
+                <div id="factQuiz" class="hidden">
+                    <div class="question-box">
+                        <p id="questionText" class="question-text"></p>
+                        <div id="optionsContainer" class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 w-full max-w-lg">
+                            </div>
+                    </div>
+                    <div id="feedbackContainer" class="text-center result-box hidden"></div>
+                </div>
+
+                <div id="graphQuiz" class="hidden">
+                    <div id="graphQuestionDisplay" class="question-display"></div>
+                    <div id="graphContainer" class="graph-container">
+                        
+                        <div class="css-graph">
+                            <div class="graph-area">
+                                <div style="position: absolute; display: flex; align-items: flex-end; width: 100%; height: 100%; bottom: 0; left: 0;">
+                                    <div class="precip-visual" style="height: 30%; left: 0%;"></div>
+                                    <div class="precip-visual" style="height: 40%; left: 8.3%;"></div>
+                                    <div class="precip-visual" style="height: 50%; left: 16.6%;"></div>
+                                    <div class="precip-visual" style="height: 60%; left: 24.9%;"></div>
+                                    <div class="precip-visual" style="height: 70%; left: 33.2%;"></div>
+                                    <div class="precip-visual" style="height: 80%; left: 41.5%;"></div>
+                                    <div class="precip-visual" style="height: 65%; left: 49.8%;"></div>
+                                    <div class="precip-visual" style="height: 55%; left: 58.1%;"></div>
+                                    <div class="precip-visual" style="height: 45%; left: 66.4%;"></div>
+                                    <div class="precip-visual" style="height: 35%; left: 74.7%;"></div>
+                                    <div class="precip-visual" style="height: 30%; left: 83%;"></div>
+                                    <div class="precip-visual" style="height: 25%; left: 91.3%;"></div>
+                                </div>
+                                
+                                <div class="temp-visual">
+                                    <div class="temp-line-path"></div>
+                                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: space-around; font-size: 10px; color: #333;">
+                                        <span>J</span><span>F</span><span>M</span><span>A</span><span>M</span><span>J</span><span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="position: absolute; top: -5%; left: -12%; width: 100px; text-align: right; color: #333; font-weight: bold; font-size: 14px;">Temp (°C)</div>
+                                <div style="position: absolute; top: -5%; right: -12%; width: 100px; text-align: left; color: #333; font-weight: bold; font-size: 14px;">Rain (mm)</div>
+
+                            </div>
+                        </div>
+                        
+                        <div id="target-temp-axis" data-key="Temperature Axis" class="target temp-axis"></div>
+                        <div id="target-rainfall-axis" data-key="Precipitation Axis" class="target rainfall-axis"></div>
+                        <div id="target-x-axis" data-key="Monthly Labels (X-Axis)" class="target x-axis-labels"></div>
+                        <div id="target-temp-line" data-key="Temperature Line (Average Monthly)" class="target temp-line"></div>
+                        <div id="target-precip-bars" data-key="Precipitation Bars" class="target precip-bars"></div>
+                    </div>
+
+                    <div id="graphFeedbackContainer" class="text-center result-box hidden"></div>
+                    <div class="flex justify-center mt-6">
+                        <button id="graphNextButton" onclick="nextGraphQuestion()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold button-shadow hover:bg-indigo-700 text-lg hidden">
+                            Next Question
+                        </button>
                     </div>
                 </div>
-                <div id="feedbackContainer" class="text-center result-box hidden"></div>
+
+                <div class="flex justify-center mt-6">
+                    <button id="startButton" onclick="startGame()" class="bg-success-color text-white px-8 py-4 rounded-full font-bold button-shadow hover:bg-emerald-600 text-xl">
+                        Start Game
+                    </button>
+                    <button id="nextButton" onclick="nextQuestion()" class="bg-success-color text-white px-8 py-4 rounded-full font-bold button-shadow hover:bg-emerald-600 text-xl hidden ml-4">
+                        Next Question
+                    </button>
+                    <button id="resetButton" onclick="resetGame()" class="bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold button-shadow hover:bg-gray-600 text-lg ml-4 hidden">
+                        Restart
+                    </button>
+                </div>
             </div>
 
-            <div id="startScreen" class="text-center">
-                <p class="text-lg text-gray-700 mb-6">Test your knowledge across 20 questions! Press 'Start' or the Spacebar to begin.</p>
-                <button id="startButton" class="bg-indigo-600 text-white px-8 py-3 rounded-full font-semibold button-shadow hover:bg-indigo-700 text-lg">
-                    Start Game
-                </button>
-            </div>
-
-            <div id="endScreen" class="text-center hidden">
-                <h3 class="text-3xl font-bold mb-4 text-gray-800">Quiz Complete!</h3>
-                <p class="text-xl mb-4" id="finalScoreText"></p>
-                <button onclick="startGame()" class="bg-success-color text-white px-6 py-2 rounded-full font-semibold button-shadow hover:bg-green-600">
-                    Play Again
-                </button>
+            <div id="introScreen" class="text-center">
+                <p class="text-lg text-gray-700 mb-6">
+                    Select a mode above to begin your preparation for a perfect score!
+                </p>
+                <p class="text-gray-500 text-sm">
+                    Use the **Visual Cheat Sheet** for quick reference during your quiz.
+                </p>
             </div>
         </div>
     </div>
 
     <script>
-        // Updated question data to use visual options where appropriate
-        const questionData = [
-            // Definitions & Concepts (Q1-Q5)
-            { 
-                text: "Weather describes the short-term state of the atmosphere. Is this True or False?", 
-                options: ["True", "False"], 
-                correct: "True",
-                key: 'Weather/Climate' 
-            },
-            { 
-                text: "Climate is the patterns in weather over a **short period** of time. Is this True or False?", 
-                options: ["True", "False"], 
-                correct: "False", 
-                key: 'Weather/Climate'
-            },
-            { 
-                text: "Precipitation is measured in what units?", 
-                options: ["Degrees Celsius (°C)", "Millimetres (mm)"], 
-                correct: "Millimetres (mm)", 
-                key: 'Units'
-            },
-            { 
-                text: "How is Total Annual Precipitation found?", 
-                options: ["Min - Max Rainfall", "Sum of all 12 months"], 
-                correct: "Sum of all 12 months", 
-                key: 'Calculations'
-            },
-            { 
-                text: "Scientists track climate change over decades and centuries. Is this True or False?", 
-                options: ["True", "False"], 
-                correct: "True", 
-                key: 'Tracking'
-            },
-            
-            // Maritime vs. Continental (Q6-Q10) - Visual focus
-            { 
-                text: "Which climate is characterized by an **Extreme** temperature range (> 25°C)?", 
-                options: ["Maritime 🌊", "Continental 🏜️"], 
-                correct: "Continental 🏜️", 
-                key: 'Climate Type' 
-            },
-            { 
-                text: "A location with an Annual Temperature Range of 12°C is likely what type of climate?", 
-                options: ["Maritime 🌊", "Continental 🏜️"], 
-                correct: "Maritime 🌊", 
-                key: 'Climate Type' 
-            },
-            { 
-                text: "Which climate type is described as **Wet** (> 1000 mm precipitation)?", 
-                options: ["Maritime 🌊", "Continental 🏜️"], 
-                correct: "Maritime 🌊", 
-                key: 'Climate Type' 
-            },
-            { 
-                text: "Being far inland results in a **moderate** temperature range. Is this True or False?", 
-                options: ["True", "False"], 
-                correct: "False", 
-                key: 'Climate Type' 
-            },
-            { 
-                text: "The main factor that keeps Maritime temperatures moderate is the nearby large body of water. Is this True or False?", 
-                options: ["True", "False"], 
-                correct: "True", 
-                key: 'Climate Type' 
-            },
-
-            // Graph Interpretation & Calculations (Q11-Q15) - Uses data from PDF graph (Page 1)
+        // --- Core Data ---
+        const factQuestions = [
             {
-                text: "What does the line graph represent?",
-                options: ["Precipitation", "Temperature"],
-                correct: "Temperature",
-                key: 'Graph Reading'
+                text: "What term describes long-term atmospheric patterns over many years?",
+                options: [
+                    { text: "1. Weather", correct: false },
+                    { text: "2. Climate", correct: true }
+                ],
+                answerExplanation: "Climate refers to long-term patterns, while weather is the short-term state of the atmosphere."
             },
             {
-                text: "Which axis (Left or Right) measures Rainfall in mm?",
-                options: ["Left (Temp) side", "Right (Precipitation) side"],
-                correct: "Right (Precipitation) side",
-                key: 'Graph Reading'
+                text: "A location with **high annual precipitation** (> 1000 mm) is likely to have which climate type?",
+                options: [
+                    { text: "1. Maritime 🌊", correct: true },
+                    { text: "2. Continental 🏜️", correct: false }
+                ],
+                answerExplanation: "Maritime climates are characterized by being wet (high precipitation) due to proximity to large water bodies."
             },
             {
-                text: "If Max Temp is 8°C and Min Temp is -10°C, what is the Annual Temperature Range (ATR)?",
-                options: ["2°C", "18°C"],
-                correct: "18°C",
-                key: 'Calculation'
+                text: "A location with an **Annual Temperature Range (ATR) greater than 25°C** has which climate type?",
+                options: [
+                    { text: "1. Maritime 🌊", correct: false },
+                    { text: "2. Continental 🏜️", correct: true }
+                ],
+                answerExplanation: "Continental climates are extreme, meaning they have a larger annual temperature range (> 25°C)."
             },
             {
-                text: "What term describes the **average weather** over many years?",
-                options: ["Weather", "Climate"],
-                correct: "Climate",
-                key: 'Weather/Climate'
+                text: "If the hottest month is 20°C and the coldest is 5°C, what is the Annual Temperature Range (ATR)?",
+                options: [
+                    { text: "1. 15°C", correct: true },
+                    { text: "2. 25°C", correct: false }
+                ],
+                answerExplanation: "ATR = Hottest (20°C) - Coldest (5°C) = 15°C."
             },
             {
-                text: "A Total Annual Precipitation of $450 \text{ mm}$ suggests which climate type?",
-                options: ["Maritime 🌊", "Continental 🏜️"],
-                correct: "Continental 🏜️",
-                key: 'Climate Type'
-            },
-
-            // Bonus/Application Questions (Q16-Q20) 
-            {
-                text: "If a location has a $26\degree\text{C}$ ATR, is it Maritime or Continental?",
-                options: ["Maritime 🌊", "Continental 🏜️"],
-                correct: "Continental 🏜️",
-                key: 'Application'
+                text: "The annual precipitation total is found by doing what with the monthly precipitation data?",
+                options: [
+                    { text: "1. Subtracting the minimum from the maximum month.", correct: false },
+                    { text: "2. Adding up all 12 monthly amounts.", correct: true }
+                ],
+                answerExplanation: "Total Annual Precipitation is the sum of all monthly precipitation amounts."
             },
             {
-                text: "The Vancouver example has a $15\degree\text{C}$ ATR. This is classified as:",
-                options: ["Moderate", "Extreme"],
-                correct: "Moderate",
-                key: 'Application'
+                text: "Being near big bodies of water makes temperatures more...",
+                options: [
+                    { text: "1. Extreme", correct: false },
+                    { text: "2. Moderate", correct: true }
+                ],
+                answerExplanation: "Water acts as a temperature regulator, leading to moderate temperatures near the coast (Maritime climate)."
             },
             {
-                text: "Which month usually represents the wettest season for a Maritime climate like Vancouver?",
-                options: ["July (07)", "November (11)"],
-                correct: "November (11)",
-                key: 'Graph Reading'
+                text: "On a climate graph, the line graph typically represents what?",
+                options: [
+                    { text: "1. Precipitation (mm)", correct: false },
+                    { text: "2. Temperature (°C)", correct: true }
+                ],
+                answerExplanation: "Temperature is usually shown as a line, read on the left axis (°C)."
             },
             {
-                text: "If the temperature line peaks in the months J, J, A (Summer), which hemisphere are you observing?",
-                options: ["Southern Hemisphere", "Northern Hemisphere"],
-                correct: "Northern Hemisphere",
-                key: 'Graph Reading'
+                text: "Climate change is tracked by studying averages over:",
+                options: [
+                    { text: "1. Weeks or Months", correct: false },
+                    { text: "2. Decades or Centuries", correct: true }
+                ],
+                answerExplanation: "Climate patterns are tracked over long periods, typically decades or centuries."
             },
             {
-                text: "Tracking climate data over centuries allows scientists to observe a trend of:",
-                options: ["Global Cooling", "Global Warming"],
-                correct: "Global Warming",
-                key: 'Tracking'
+                text: "If the hottest month is 15°C and the coldest is -15°C, is the climate Maritime or Continental?",
+                options: [
+                    { text: "1. Maritime 🌊", correct: false },
+                    { text: "2. Continental 🏜️", correct: true }
+                ],
+                answerExplanation: "ATR = 15 - (-15) = 30°C. Since 30°C > 25°C, this is an extreme, Continental climate."
+            },
+            {
+                text: "The unit for precipitation (rainfall) on a climate graph is usually:",
+                options: [
+                    { text: "1. Degrees Celsius (°C)", correct: false },
+                    { text: "2. Millimetres (mm)", correct: true }
+                ],
+                answerExplanation: "Precipitation is measured in millimetres (mm)."
+            },
+            {
+                text: "A 'dry' climate is generally defined by an annual precipitation amount of...",
+                options: [
+                    { text: "1. Greater than 1000 mm", correct: false },
+                    { text: "2. Less than 1000 mm", correct: true }
+                ],
+                answerExplanation: "Continental climates are typically defined as dry, with less than 1000 mm of annual precipitation."
+            },
+            {
+                text: "The main factor determining if a climate is Continental or Maritime is proximity to:",
+                options: [
+                    { text: "1. Mountains", correct: false },
+                    { text: "2. Large bodies of water", correct: true }
+                ],
+                answerExplanation: "Maritime and Continental classifications are based on influence by large bodies of water."
+            },
+            {
+                text: "Which variable is represented by the left y-axis on the graph?",
+                options: [
+                    { text: "1. Precipitation", correct: false },
+                    { text: "2. Temperature", correct: true }
+                ],
+                answerExplanation: "The left axis measures Temperature (°C)."
+            },
+            {
+                text: "Which variable is represented by the right y-axis on the graph?",
+                options: [
+                    { text: "1. Precipitation", correct: true },
+                    { text: "2. Temperature", correct: false }
+                ],
+                answerExplanation: "The right axis measures Precipitation (mm)."
+            },
+            {
+                text: "If the ATR is 8°C, is this considered Moderate or Extreme?",
+                options: [
+                    { text: "1. Moderate", correct: true },
+                    { text: "2. Extreme", correct: false }
+                ],
+                answerExplanation: "An ATR of 8°C is significantly less than 25°C, classifying it as moderate."
+            },
+            {
+                text: "The letters JFMAMJJA SOND on the bottom of the graph represent:",
+                options: [
+                    { text: "1. Global Locations", correct: false },
+                    { text: "2. Months of the Year", correct: true }
+                ],
+                answerExplanation: "These letters represent the months from January to December."
+            },
+            {
+                text: "In a Continental climate, are the summers usually hot or mild?",
+                options: [
+                    { text: "1. Mild", correct: false },
+                    { text: "2. Hot (Extreme)", correct: true }
+                ],
+                answerExplanation: "Continental climates are characterized by extreme temperatures, meaning hot summers and cold winters."
+            },
+            {
+                text: "Which statement is correct? Climate is a short-term description; weather is a long-term pattern.",
+                options: [
+                    { text: "1. True", correct: false },
+                    { text: "2. False", correct: true }
+                ],
+                answerExplanation: "FALSE. Weather is short-term; Climate is long-term."
+            },
+            {
+                text: "What does ATR stand for?",
+                options: [
+                    { text: "1. Annual Total Rainfall", correct: false },
+                    { text: "2. Annual Temperature Range", correct: true }
+                ],
+                answerExplanation: "ATR stands for Annual Temperature Range."
+            },
+            {
+                text: "A moderate temperature range (ATR < 25°C) is a key feature of a **Maritime** climate.",
+                options: [
+                    { text: "1. True", correct: true },
+                    { text: "2. False", correct: false }
+                ],
+                answerExplanation: "TRUE. Maritime climates have moderate temperatures due to the water's regulating effect."
             }
         ];
 
-        let questions = [];
+        const graphQuestions = [
+            { question: "Click the **Precipitation Axis** (mm, right side)", key: "Precipitation Axis" },
+            { question: "Click the **Temperature Axis** (°C, left side)", key: "Temperature Axis" },
+            { question: "Click on the **Monthly Labels** (J F M... on the bottom)", key: "Monthly Labels (X-Axis)" },
+            { question: "Click the **Temperature Line** (The curved, red path)", key: "Temperature Line (Average Monthly)" },
+            { question: "Click the **Precipitation Bars** (The blue columns)", key: "Precipitation Bars" }
+        ];
+
+        // --- State Variables ---
+        let currentMode = null; // 'fact' or 'graph'
         let currentQuestionIndex = 0;
         let score = 0;
-        let answered = false;
+        let hasAnswered = false;
+        let currentQuestions = []; 
 
-        const currentQuestionNumEl = document.getElementById('currentQuestionNum');
-        const totalQuestionsEl = document.getElementById('totalQuestions');
-        const scoreDisplayEl = document.getElementById('scoreDisplay');
-        const questionTextEl = document.getElementById('questionText');
-        const optionsContainerEl = document.getElementById('optionsContainer');
-        const feedbackContainerEl = document.getElementById('feedbackContainer');
-        const startScreenEl = document.getElementById('startScreen');
-        const quizContentEl = document.getElementById('quizContent');
-        const endScreenEl = document.getElementById('endScreen');
-        const finalScoreTextEl = document.getElementById('finalScoreText');
+        // --- DOM Elements ---
+        const factQuiz = document.getElementById('factQuiz');
+        const graphQuiz = document.getElementById('graphQuiz');
+        const quizHeader = document.getElementById('quizHeader');
+        const quizContent = document.getElementById('quizContent');
+        const introScreen = document.getElementById('introScreen');
+        const quizModeTitle = document.getElementById('quizModeTitle');
+        const currentQuestionNum = document.getElementById('currentQuestionNum');
+        const totalQuestions = document.getElementById('totalQuestions');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const feedbackContainer = document.getElementById('feedbackContainer');
+        const graphQuestionDisplay = document.getElementById('graphQuestionDisplay');
+        const graphFeedbackContainer = document.getElementById('graphFeedbackContainer');
+        const targets = document.querySelectorAll('.target');
         const startButton = document.getElementById('startButton');
+        const nextButton = document.getElementById('nextButton');
+        const graphNextButton = document.getElementById('graphNextButton');
+        const resetButton = document.getElementById('resetButton');
 
+
+        // --- Helper Functions ---
 
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -349,178 +551,270 @@
             }
         }
 
-        function startGame() {
-            // Setup quiz state
-            questions = [...questionData];
-            shuffleArray(questions);
+        // --- Game Setup & Control ---
+
+        function setMode(mode) {
+            currentMode = mode;
             currentQuestionIndex = 0;
             score = 0;
-            answered = false;
             
-            // Update displays
-            totalQuestionsEl.textContent = questions.length;
-            currentQuestionNumEl.textContent = 0;
-            scoreDisplayEl.textContent = 0;
-            startScreenEl.classList.add('hidden');
-            endScreenEl.classList.add('hidden');
-            quizContentEl.classList.remove('hidden');
-            feedbackContainerEl.classList.add('hidden');
+            // Set up UI visibility
+            introScreen.classList.add('hidden');
+            quizContent.classList.remove('hidden');
+            quizHeader.classList.add('hidden');
+            feedbackContainer.classList.add('hidden');
+            graphFeedbackContainer.classList.add('hidden');
+            nextButton.classList.add('hidden');
+            graphNextButton.classList.add('hidden');
+            resetButton.classList.add('hidden');
+            startButton.classList.remove('hidden');
+
+            // Hide/Show modes
+            factQuiz.classList.add('hidden');
+            graphQuiz.classList.add('hidden');
+
+            if (mode === 'fact') {
+                factQuiz.classList.remove('hidden');
+                quizModeTitle.textContent = "Fact Blitz";
+                currentQuestions = [...factQuestions];
+                shuffleArray(currentQuestions);
+            } else if (mode === 'graph') {
+                graphQuiz.classList.remove('hidden');
+                quizModeTitle.textContent = "Graph Identifier";
+                currentQuestions = [...graphQuestions];
+                shuffleArray(currentQuestions);
+            }
             
-            loadQuestion();
+            totalQuestions.textContent = currentQuestions.length;
+            // Clear buttons/targets from previous state
+            optionsContainer.innerHTML = ''; 
+            targets.forEach(t => t.classList.remove('correct-graph', 'incorrect-graph'));
         }
 
-        function loadQuestion() {
-            if (currentQuestionIndex >= questions.length) {
-                endGame();
-                return;
+        function startGame() {
+            if (currentMode === null) return; // Must select a mode first
+            
+            resetGame();
+            quizHeader.classList.remove('hidden');
+            startButton.classList.add('hidden');
+            resetButton.classList.remove('hidden');
+            
+            if (currentMode === 'fact') {
+                loadFactQuestion();
+            } else if (currentMode === 'graph') {
+                loadGraphQuestion();
+            }
+        }
+
+        function resetGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreDisplay.textContent = 0;
+            hasAnswered = false;
+            
+            // Re-shuffle for a new game
+            if (currentMode === 'fact') {
+                currentQuestions = [...factQuestions];
+                shuffleArray(currentQuestions);
+            } else if (currentMode === 'graph') {
+                currentQuestions = [...graphQuestions];
+                shuffleArray(currentQuestions);
+                targets.forEach(t => t.classList.remove('correct-graph', 'incorrect-graph'));
+            }
+            totalQuestions.textContent = currentQuestions.length;
+            
+            // Clear previous results
+            feedbackContainer.classList.add('hidden');
+            graphFeedbackContainer.classList.add('hidden');
+            nextButton.classList.add('hidden');
+            graphNextButton.classList.add('hidden');
+        }
+
+        function endGame() {
+            quizModeTitle.textContent = "Quiz Finished!";
+            
+            // Determine final screen content based on mode
+            if (currentMode === 'fact') {
+                questionText.textContent = `You scored ${score} out of ${currentQuestions.length}!`;
+                optionsContainer.innerHTML = `<p class="text-xl text-gray-700">${score === currentQuestions.length ? 'Perfect Score! You mastered the facts. 🏆' : 'Time for a quick review before your test! 📚'}</p>`;
+            } else if (currentMode === 'graph') {
+                graphQuestionDisplay.textContent = `You scored ${score} out of ${currentQuestions.length}!`;
+                graphFeedbackContainer.className = 'result-box ' + (score === currentQuestions.length ? 'result-correct' : 'result-incorrect');
+                graphFeedbackContainer.textContent = score === currentQuestions.length ? 'Fantastic! You know your graph anatomy perfectly. 🏆' : 'Keep practicing those visual labels!';
+                graphFeedbackContainer.classList.remove('hidden');
+            }
+            
+            nextButton.classList.add('hidden');
+            graphNextButton.classList.add('hidden');
+            startButton.textContent = "Play Again";
+            startButton.classList.remove('hidden');
+            resetButton.classList.add('hidden');
+            currentQuestionNum.textContent = currentQuestions.length; 
+        }
+
+        // --- Fact Blitz Logic ---
+
+        function loadFactQuestion() {
+            if (currentQuestionIndex >= currentQuestions.length) {
+                return endGame();
+            }
+            
+            hasAnswered = false;
+            const q = currentQuestions[currentQuestionIndex];
+            
+            // Update UI
+            currentQuestionNum.textContent = currentQuestionIndex + 1;
+            questionText.textContent = q.text;
+            feedbackContainer.classList.add('hidden');
+            nextButton.classList.add('hidden');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-button w-full border-2 border-indigo-400 text-gray-800 bg-white rounded-lg font-medium';
+                btn.textContent = option.text;
+                btn.setAttribute('data-index', index);
+                btn.onclick = () => checkFactAnswer(btn, q);
+                optionsContainer.appendChild(btn);
+            });
+            document.addEventListener('keydown', handleFactKeydown);
+        }
+        
+        function handleFactKeydown(event) {
+            if (hasAnswered) return;
+            const key = event.key;
+            let buttonIndex = -1;
+            if (key === '1') buttonIndex = 0;
+            else if (key === '2') buttonIndex = 1;
+
+            if (buttonIndex !== -1) {
+                const button = optionsContainer.querySelector(`[data-index="${buttonIndex}"]`);
+                if (button) {
+                    document.removeEventListener('keydown', handleFactKeydown);
+                    checkFactAnswer(button, currentQuestions[currentQuestionIndex]);
+                }
+            }
+        }
+        
+        function checkFactAnswer(clickedButton, question) {
+            if (hasAnswered) return;
+            hasAnswered = true;
+            document.removeEventListener('keydown', handleFactKeydown);
+
+            const selectedIndex = parseInt(clickedButton.getAttribute('data-index'));
+            const isCorrect = question.options[selectedIndex].correct;
+            
+            // Visual feedback
+            clickedButton.classList.add(isCorrect ? 'correct-answer' : 'incorrect-answer');
+            if (!isCorrect) {
+                const correctButton = optionsContainer.querySelector(`[data-index="${question.options.findIndex(opt => opt.correct)}"]`);
+                correctButton.classList.add('correct-answer');
             }
 
-            answered = false;
-            const q = questions[currentQuestionIndex];
-            
-            currentQuestionNumEl.textContent = currentQuestionIndex + 1;
-            questionTextEl.textContent = q.text;
-            feedbackContainerEl.classList.add('hidden');
-            optionsContainerEl.innerHTML = '';
-            
-            // Shuffle options for better interactivity
-            const options = [...q.options];
-            shuffleArray(options);
-
-            options.forEach((option, index) => {
-                const button = document.createElement('button');
-                button.textContent = `[${index + 1}] ${option}`;
-                // Apply visual styling
-                button.classList.add('option-button', 'flex-1', 'rounded-lg', 'font-extrabold', 'bg-white', 'text-gray-900', 'border-2', 'border-indigo-300');
-                
-                // Add color based on the type of climate, if applicable
-                if (option.includes('Maritime')) {
-                     button.classList.add('text-blue-700', 'border-blue-500');
-                     button.classList.remove('border-indigo-300');
-                } else if (option.includes('Continental')) {
-                     button.classList.add('text-amber-700', 'border-amber-500');
-                     button.classList.remove('border-indigo-300');
-                }
-
-                button.onclick = () => checkAnswer(option, button);
-                button.setAttribute('data-key', index + 1); // For keyboard input
-                optionsContainerEl.appendChild(button);
-            });
-        }
-
-        function checkAnswer(selectedOption, clickedButton) {
-            if (answered) return; 
-
-            answered = true;
-            const q = questions[currentQuestionIndex];
-            
-            // Remove the keyboard handler temporarily to prevent spamming
-            document.removeEventListener('keydown', handleKeyPress);
-            
-            const isCorrect = selectedOption === q.correct;
-            
-            // Get all buttons currently in the container for uniform feedback
-            const currentTargets = Array.from(optionsContainerEl.querySelectorAll('.option-button'));
-
-            currentTargets.forEach(btn => {
-                // Strip the [1] or [2] prefix for comparison
-                const optionText = btn.textContent.replace(/^\[\d\]\s*/, '');
-                
-                // Disable all buttons immediately
-                btn.disabled = true;
-
-                // Highlight correct and incorrect choices
-                if (optionText === q.correct) {
-                    btn.classList.add('correct-answer');
-                } else if (btn === clickedButton) {
-                    // Only highlight the wrong answer the user chose
-                    btn.classList.add('incorrect-answer');
-                }
-                
-                // Remove generic styling
-                btn.classList.remove('bg-white', 'text-gray-900', 'border-indigo-300', 'text-blue-700', 'border-blue-500', 'text-amber-700', 'border-amber-500');
-
-            });
-
+            // Score update and detailed feedback
             if (isCorrect) {
                 score++;
-                feedbackContainerEl.textContent = "✅ Correct! Excellent work on the " + q.key + " concept.";
-                feedbackContainerEl.classList.remove('result-incorrect');
-                feedbackContainerEl.classList.add('result-correct');
+                scoreDisplay.textContent = score;
+                feedbackContainer.className = 'result-box result-correct';
+                feedbackContainer.textContent = "Correct! " + question.answerExplanation;
             } else {
-                feedbackContainerEl.textContent = `❌ Incorrect. The correct answer was: ${q.correct}. Focus on the ${q.key} section of the cheat sheet.`;
-                feedbackContainerEl.classList.remove('result-correct');
-                feedbackContainerEl.classList.add('result-incorrect');
+                feedbackContainer.className = 'result-box result-incorrect';
+                feedbackContainer.textContent = "Incorrect. " + question.answerExplanation;
             }
+            feedbackContainer.classList.remove('hidden');
 
-            scoreDisplayEl.textContent = score;
-            feedbackContainerEl.classList.remove('hidden');
+            // Disable all buttons and show next button
+            optionsContainer.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            nextButton.classList.remove('hidden');
 
-            // Move to next question after a brief delay
+            // Set timeout for next question
             setTimeout(() => {
-                // Re-enable keyboard handler and load next question
-                document.addEventListener('keydown', handleKeyPress);
-                nextQuestion();
+                currentQuestionIndex++;
+                loadFactQuestion();
             }, 1800);
         }
 
         function nextQuestion() {
+            // This button is only shown when an answer is selected
             currentQuestionIndex++;
-            loadQuestion();
+            loadFactQuestion();
         }
 
-        function endGame() {
-            quizContentEl.classList.add('hidden');
-            endScreenEl.classList.remove('hidden');
+        // --- Graph Identifier Logic ---
+        
+        function loadGraphQuestion() {
+            if (currentQuestionIndex >= currentQuestions.length) {
+                return endGame();
+            }
+
+            hasAnswered = false;
+            const q = currentQuestions[currentQuestionIndex];
             
-            let message = `You scored ${score} out of ${questions.length}. `;
-            let performance = '';
+            // Update UI
+            currentQuestionNum.textContent = currentQuestionIndex + 1;
+            graphQuestionDisplay.textContent = q.question;
+            graphFeedbackContainer.classList.add('hidden');
+            graphNextButton.classList.add('hidden');
 
-            finalScoreTextEl.classList.remove('text-success-color', 'text-yellow-600', 'text-fail-color');
-
-            if (score === questions.length) {
-                performance = "Perfect 100%! You are ready for the test! 🥇";
-                finalScoreTextEl.classList.add('text-success-color');
-            } else if (score >= questions.length * 0.9) {
-                performance = "Outstanding! Almost perfect. Review your incorrect answers and try again. 🌟";
-                finalScoreTextEl.classList.add('text-yellow-600');
-            } else {
-                performance = "Good effort! Take a quick look at the cheat sheet and try again for that 100%. 📚";
-                finalScoreTextEl.classList.add('text-fail-color');
-            }
-
-            finalScoreTextEl.textContent = message + performance;
-        }
-
-        // Dedicated keyboard handler function
-        function handleKeyPress(e) {
-            if (endScreenEl.classList.contains('hidden') && startScreenEl.classList.contains('hidden')) {
-                // Handle answer selection (1 or 2)
-                const key = parseInt(e.key);
-                if (!answered && (key === 1 || key === 2)) {
-                    const button = document.querySelector(`button[data-key="${key}"]`);
-                    if (button && !button.disabled) {
-                        e.preventDefault();
-                        const selectedOption = button.textContent.replace(/^\[\d\]\s*/, '');
-                        checkAnswer(selectedOption, button);
-                    }
-                }
-            } else if (!startScreenEl.classList.contains('hidden') && e.key === ' ') {
-                // Handle starting the game with Spacebar
-                e.preventDefault(); 
-                startGame();
-            }
+            // Reset targets
+            targets.forEach(t => {
+                t.classList.remove('correct-graph', 'incorrect-graph');
+                t.onclick = () => checkGraphAnswer(t); // Re-enable click listener
+                t.style.pointerEvents = 'auto'; // Ensure targets are clickable
+            });
         }
         
-        // Add keyboard handler on document load
-        document.addEventListener('keydown', handleKeyPress);
+        function checkGraphAnswer(clickedTarget) {
+            if (hasAnswered) return;
 
-        // Initialize game on load
+            const question = currentQuestions[currentQuestionIndex];
+            const clickedKey = clickedTarget.getAttribute('data-key');
+            const isCorrect = clickedKey === question.key;
+
+            hasAnswered = true;
+            
+            // Visual feedback on the target itself
+            targets.forEach(t => t.style.pointerEvents = 'none'); // Disable further clicks
+            clickedTarget.classList.add(isCorrect ? 'correct-graph' : 'incorrect-graph');
+
+            // Show feedback
+            if (isCorrect) {
+                score++;
+                scoreDisplay.textContent = score;
+                graphFeedbackContainer.className = 'result-box result-correct';
+                graphFeedbackContainer.textContent = "✅ Correct! You identified the " + question.key + ".";
+            } else {
+                graphFeedbackContainer.className = 'result-box result-incorrect';
+                graphFeedbackContainer.textContent = `❌ Incorrect. The correct area was the ${question.key}.`;
+                
+                // Highlight the correct answer
+                document.querySelector(`[data-key="${question.key}"]`).classList.add('correct-graph');
+            }
+            graphFeedbackContainer.classList.remove('hidden');
+            graphNextButton.classList.remove('hidden');
+        }
+
+        function nextGraphQuestion() {
+            currentQuestionIndex++;
+            loadGraphQuestion();
+        }
+
+        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            totalQuestionsEl.textContent = questionData.length;
-            startButton.addEventListener('click', startGame);
-        });
-    </script>
+            // Set initial mode prompt
+            setMode(null);
 
+            // Attach checkGraphAnswer to targets once
+            targets.forEach(t => {
+                t.onclick = (e) => checkGraphAnswer(e.currentTarget);
+            });
+            
+            document.getElementById('factBlitzButton').addEventListener('click', () => setMode('fact'));
+            document.getElementById('graphIdButton').addEventListener('click', () => setMode('graph'));
+            document.getElementById('startButton').addEventListener('click', startGame);
+            document.getElementById('resetButton').addEventListener('click', resetGame);
+        });
+
+    </script>
 </body>
 </html>
